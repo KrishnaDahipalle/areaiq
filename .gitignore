@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+build/
+.env.local
+.env.development.local
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+.env
+instance/
+.pytest_cache/
+.DS_Store
+Thumbs.db
+desktop.ini
