@@ -103,6 +103,9 @@ class AreaIQAgentCoordinator:
         long_term = session.long_term_memory
         short_term = session.short_term_memory
 
+        print(type(long_term))
+        print(dir(long_term))
+
         context = context_service.resolve_reference(
             sanitized_text,
             long_term.agent_state

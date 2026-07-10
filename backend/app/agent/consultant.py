@@ -20,7 +20,7 @@ class AIConsultant:
         """
         
         # Initialize the model without the version-locked keyword argument
-        self.model = genai.GenerativeModel(model_name="gemini-2.5-flash")
+        self.model = genai.GenerativeModel(model_name="gemini-2.0-flash")
 
     def generate_response(self, chat_history: List[Dict[str, str]], missing_slots: List[str]) -> str:
         """

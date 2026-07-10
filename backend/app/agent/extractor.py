@@ -41,7 +41,7 @@ class MasterExtractionPayload(BaseModel):
 class AIExtractor:
     def __init__(self):
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        self.model = genai.GenerativeModel("gemini-2.5-flash")
+        self.model = genai.GenerativeModel("gemini-flash-lite-latest")
 
     def extract_slots_from_text(self, user_message: str, current_profile: dict) -> dict:
         """
@@ -83,17 +83,61 @@ class AIExtractor:
         
         try:
             response = self.model.generate_content(
-                contents=[{"role": "user", "parts": [f"{system_instruction}\n\nUSER INPUT: {user_message}"]}],
-                generation_config=genai.GenerationConfig(
-                    response_mime_type="application/json",
-                    response_schema=MasterExtractionPayload
-                )
+                f"""
+            You are an information extraction engine.
+
+            Extract relocation information from the user message.
+
+            Return ONLY valid JSON.
+
+            Schema:
+
+            {{
+            "purpose": null,
+            "office_location": null,
+            "budget": {{
+                "value": null
+            }},
+            "family_details": {{
+                "has_children": null,
+                "family_size": null
+            }},
+            "preferences": {{
+                "avoid_traffic": null,
+                "quiet_neighborhood": null,
+                "walk_to_work": null,
+                "investment_focus": null
+            }}
+            }}
+
+            User Message:
+            {user_message}
+            """
             )
+
+            print("\nRAW GEMINI RESPONSE:")
+            print(response.text)
+
+            text = response.text.strip()
+
+            if text.startswith("```json"):
+                text = (
+                    text.replace("```json", "")
+                    .replace("```", "")
+                    .strip()
+                )
+
+            return json.loads(text)
+            print("\nRAW GEMINI RESPONSE:")
+            print(response.text)
             
             # Pure validation extraction using our schema definition model
             validated = MasterExtractionPayload.model_validate_json(response.text.strip())
             return validated.model_dump(exclude_none=True)
-        except Exception:
+        except Exception as e:
+            print("\nEXTRACTOR ERROR:")
+            print(type(e))
+            print(str(e))
             return {}
 
 ai_extractor = AIExtractor()

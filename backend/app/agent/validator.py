@@ -37,7 +37,7 @@ class AgentMemoryValidator:
         # 2. Audit Office Location Alignment
         office = sanitized.get("office_location")
         if office and isinstance(office, str):
-            dataset = ranking_engine._get_dataset()
+            dataset = ranking_engine._load_dataset()
             localities = dataset.get("localities", [])
             
             # Cross-check if the stated office location matches or flanks known areas
