@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "AreaIQ - Hyderabad Relocation Intelligence",
-  description: "Scalable Multi-Criteria Decision Analysis Relocation Engine Matrix Core v1",
+  description: "Scalable Multi-Criteria Decision Analysis Relocation Engine Matrix Core",
 };
 
 export default function RootLayout({
