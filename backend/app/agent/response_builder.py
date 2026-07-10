@@ -16,7 +16,7 @@ class ResponseBuilder:
         )
 
         self.model = genai.GenerativeModel(
-            "gemini-2.5-flash"
+            "gemini-flash-lite-latest"
         )
 
         self.system_prompt = """
@@ -104,7 +104,10 @@ Generate the response.
 
             return response.text.strip()
 
-        except Exception:
+        except Exception as e:
+
+            print("RESPONSE BUILDER ERROR")
+            print(str(e))
 
             return (
                 "I completed the analysis but "
