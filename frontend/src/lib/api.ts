@@ -3,12 +3,6 @@ export interface ChatMessage {
   content: string;
 }
 
-export interface ChatRequestPayload {
-  user_id: string;
-  session_id: string;
-  message: string;
-}
-
 export interface ChatResponsePayload {
   session_id: string;
   reply: string;
@@ -17,7 +11,7 @@ export interface ChatResponsePayload {
   missing_slots: string[];
 }
 
-export interface LocalityScoreBreakdown {
+export interface LocalityScoringResponse {
   locality_id: string;
   name: string;
   global_suitability_score: number;
@@ -26,47 +20,126 @@ export interface LocalityScoreBreakdown {
 }
 
 export interface RecommendResponsePayload {
-  recommended_locality: LocalityScoreBreakdown;
-  ranked_alternatives: LocalityScoreBreakdown[];
+  recommended_locality: LocalityScoringResponse;
+  ranked_alternatives: LocalityScoringResponse[];
   conflicts_detected: string[];
-  consultant_summary: string;
 }
 
-const BASE_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+export interface DimensionalMatrixEntry {
+  locality_1_value: number;
+  locality_2_value: number;
+  variance: number;
+}
 
-export const ApiClient = {
-  async sendChatMessage(payload: ChatRequestPayload): Promise<ChatResponsePayload> {
-    const response = await fetch(`${BASE_API_URL}/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+export interface ComparisonResponsePayload {
+  locality_1_meta: {
+    id: string;
+    name: string;
+    tier: string;
+  };
+  locality_2_meta: {
+    id: string;
+    name: string;
+    tier: string;
+  };
+  dimensional_matrix: Record<string, DimensionalMatrixEntry>;
+  financial_variance: {
+    rent_3bhk_delta_inr: number;
+    more_affordable: string;
+  };
+  summary: {
+    locality_1_focus_wins: number;
+    locality_2_focus_wins: number;
+    structural_verdict: string;
+  };
+}
+
+export interface ExplanationResponsePayload {
+  locality: string;
+  matched_priority_count: number;
+  explanation: string[];
+  summary: string;
+}
+
+export interface ItineraryItem {
+  time: string;
+  milestone: string;
+  activity: string;
+}
+
+export interface ItineraryResponsePayload {
+  locality_id: string;
+  locality_name: string;
+  recommended_focus: string;
+  itinerary: ItineraryItem[];
+}
+
+export class ApiClient {
+  private static BASE_URL = "http://localhost:8000/api/v1";
+
+  private static async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    const response = await fetch(`${this.BASE_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(options?.headers || {}),
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `Network pipeline communication breakdown: ${response.status}`);
+    }
+
+    return response.json() as Promise<T>;
+  }
+
+  /**
+   * Dispatches user message tokens straight to the conversational agent loop coordinator
+   */
+  static async sendChatMessage(payload: { user_id: string; session_id: string; message: string }): Promise<ChatResponsePayload> {
+    return this.request<ChatResponsePayload>("/chat", {
+      method: "POST",
       body: JSON.stringify(payload),
     });
-    if (!response.ok) {
-      throw new Error(`API Chat error: ${response.statusText}`);
-    }
-    return response.json();
-  },
+  }
 
-  async getRecommendations(user_id: string, session_id: string): Promise<RecommendResponsePayload> {
-    const response = await fetch(`${BASE_API_URL}/recommend`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+  /**
+   * Compiles the MCDA suitability evaluation matrix based on extracted user state vectors
+   */
+  static async getRecommendations(user_id: string, session_id: string): Promise<RecommendResponsePayload> {
+    return this.request<RecommendResponsePayload>("/recommend", {
+      method: "POST",
       body: JSON.stringify({ user_id, session_id }),
     });
-    if (!response.ok) {
-      throw new Error(`API Recommendation error: ${response.statusText}`);
-    }
-    return response.json();
-  },
-
-  async getLocalityData(localityId: string): Promise<any> {
-    const response = await fetch(`${BASE_API_URL}/locality/IN/TS/Hyderabad/${localityId}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!response.ok) {
-      throw new Error(`API Locality fetch error: ${response.statusText}`);
-    }
-    return response.json();
   }
-};
+
+  /**
+   * Executes a cross-matrix side-by-side dimensional performance and budget variant assessment
+   */
+  static async compareLocalities(area1: string, area2: string): Promise<ComparisonResponsePayload> {
+    return this.request<ComparisonResponsePayload>("/compare", {
+      method: "POST",
+      body: JSON.stringify({ area1, area2 }),
+    });
+  }
+
+  /**
+   * Generates mathematical alignment analysis matching profile priorities to area indexes
+   */
+  static async getExplanation(user_id: string, session_id: string, locality_id: string): Promise<ExplanationResponsePayload> {
+    return this.request<ExplanationResponsePayload>("/explain", {
+      method: "POST",
+      body: JSON.stringify({ user_id, session_id, locality_id }),
+    });
+  }
+
+  /**
+   * Pulls physical neighborhood exploration timelines generated from asset vectors
+   */
+  static async getItinerary(locality_id: string): Promise<ItineraryResponsePayload> {
+    return this.request<ItineraryResponsePayload>(`/planner/generate/${locality_id}`, {
+      method: "GET",
+    });
+  }
+}
