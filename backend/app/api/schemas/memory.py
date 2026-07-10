@@ -19,21 +19,63 @@ class FamilyProfile(BaseModel):
     has_children: Optional[bool] = Field(None, description="Flag for school accessibility weightings")
     family_size: Optional[int] = Field(None, description="Total absolute count of relocation members")
 
+class PriorityMatrixAllocation(BaseModel):
+    safety: float = Field(1.0, ge=1.0, le=10.0, description="Importance allocation value for local safety indexes")
+    education: float = Field(1.0, ge=1.0, le=10.0, description="Importance allocation value for school access points")
+    healthcare: float = Field(1.0, ge=1.0, le=10.0, description="Importance allocation value for clinical asset proximity")
+    connectivity: float = Field(1.0, ge=1.0, le=10.0, description="Importance allocation value for transit corridors")
+    investment: float = Field(1.0, ge=1.0, le=10.0, description="Importance allocation value for long-term appreciation trajectories")
+    lifestyle: float = Field(1.0, ge=1.0, le=10.0, description="Importance allocation value for social profile density metrics")
+
 class LongTermMemoryModel(BaseModel):
     missing_slots: List[str] = Field(
-        default_factory=lambda: ["purpose", "office_location", "budget", "family_details", "priorities"],
-        description="Tracks unfilled criteria tokens required before calculation execution"
+        default_factory=lambda: [
+            "purpose",
+            "office_location",
+            "budget",
+            "family_details",
+            "priorities"
+        ]
     )
+
     is_complete: bool = False
+
     extracted_profile: Dict[str, Any] = Field(
         default_factory=lambda: {
             "purpose": None,
+
             "office_location": None,
-            "budget": None,
-            "family_details": None,
-            "priorities": None
-        },
-        description="Persisted metrics capturing verified user constraints"
+
+            "budget": {
+                "value": None,
+                "currency": "INR",
+                "preferred_type": "Rent"
+            },
+
+            "family_details": {
+                "has_children": None,
+                "family_size": None
+            },
+
+            "priorities": {
+                "safety": 1.0,
+                "education": 1.0,
+                "healthcare": 1.0,
+                "connectivity": 1.0,
+                "investment": 1.0,
+                "lifestyle": 1.0
+            },
+
+            "preferences": {
+                "avoid_localities": [],
+                "walk_to_work": False,
+                "avoid_traffic": False,
+                "nightlife_importance": 5,
+                "investment_focus": False,
+                "quiet_neighborhood": False,
+                "good_schools_priority": False
+            }
+        }
     )
 
 class UserSessionStateModel(BaseModel):

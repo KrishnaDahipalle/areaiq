@@ -1,52 +1,99 @@
 import json
+from typing import Dict, Any, Optional
 import google.generativeai as genai
+from pydantic import BaseModel, Field
 from app.config import settings
+
+# Define matching Pydantic response structures for type-safe inference
+class BudgetSlotSchema(BaseModel):
+    value: Optional[int] = Field(None, description="Maximum monthly rent ceiling limit in INR numbers.")
+
+class FamilySlotSchema(BaseModel):
+    has_children: Optional[bool] = Field(None, description="True if kids or schooling context are present.")
+    family_size: Optional[int] = Field(None, description="Total relocation headcount count index.")
+
+class PrioritiesSlotSchema(BaseModel):
+    safety: Optional[float] = Field(None, description="Scale parameter valuation from 1.0 to 10.0")
+    education: Optional[float] = Field(None, description="Scale parameter valuation from 1.0 to 10.0")
+    healthcare: Optional[float] = Field(None, description="Scale parameter valuation from 1.0 to 10.0")
+    connectivity: Optional[float] = Field(None, description="Scale parameter valuation from 1.0 to 10.0")
+    investment: Optional[float] = Field(None, description="Scale parameter valuation from 1.0 to 10.0")
+    lifestyle: Optional[float] = Field(None, description="Scale parameter valuation from 1.0 to 10.0")
+
+class PreferenceSlotSchema(BaseModel):
+    avoid_localities: Optional[list[str]] = None
+    walk_to_work: Optional[bool] = None
+    avoid_traffic: Optional[bool] = None
+    nightlife_importance: Optional[int] = None
+    investment_focus: Optional[bool] = None
+    quiet_neighborhood: Optional[bool] = None
+    good_schools_priority: Optional[bool] = None
+    
+
+class MasterExtractionPayload(BaseModel):
+    purpose: Optional[str] = Field(None)
+    office_location: Optional[str] = Field(None)
+    budget: Optional[BudgetSlotSchema] = Field(None)
+    family_details: Optional[FamilySlotSchema] = Field(None)
+    priorities: Optional[PrioritiesSlotSchema] = Field(None)
+    preferences: Optional[PreferenceSlotSchema] = Field(None)
 
 class AIExtractor:
     def __init__(self):
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        # Use gemini-2.5-flash for lightning-fast structural text classification during a hackathon
         self.model = genai.GenerativeModel("gemini-2.5-flash")
 
     def extract_slots_from_text(self, user_message: str, current_profile: dict) -> dict:
         """
-        Passive extraction loop. Scans user inputs to isolate structured profile adjustments.
-        Returns a clean JSON schema dictionary containing updated fields.
+        Passive parameter extraction using native structural json token rendering configurations.
         """
         system_instruction = f"""
-        You are a highly precise real estate slot-filling extractor agent for AreaIQ Hyderabad.
-        Analyze the incoming user message and extract updates for any of these 5 profile keys:
-        1. "purpose": Why are they moving? (e.g., family relocation, bachelor, corporate housing)
-        2. "office_location": Specific workspace area name (e.g., Mindspace, Financial District, Gachibowli)
-        3. "budget": A dictionary containing key "value" (integer, maximum monthly rental in INR). E.g., if they say 'under 50k', value is 50000.
-        4. "family_details": Specific criteria like 'has_children' (boolean) or 'family_size' (integer).
-        5. "priorities": A dictionary allocating importance values from 1.0 (Low) to 10.0 (Critical) for target dimensions: "safety", "education", "healthcare", "connectivity", "investment", "lifestyle".
-
-        CURRENT PROFILE STATE REFERENCE:
+        You are a structured extraction engine for AreaIQ Hyderabad. Isolating parameters from user messages.
+        
+        CURRENT STATE REGISTERS:
         {json.dumps(current_profile)}
+        
+        If an attribute is populated in the state register, keep it unless overridden explicitly.
 
-        CRITICAL OUTPUT RULE:
-        You must reply EXCLUSIVELY with a valid raw JSON object. Do not include markdown codeblocks (like ```json), no wrapping prose, and no explanation text. If a value cannot be extracted, set its value to null.
+        Also extract lifestyle preferences.
+
+        Examples:
+
+        "I hate traffic"
+        -> avoid_traffic=true
+
+        "I prefer quiet places"
+        -> quiet_neighborhood=true
+
+        "I want good schools"
+        -> good_schools_priority=true
+
+        "I want nightlife"
+        -> nightlife_importance=10
+
+        "Don't recommend Madhapur"
+        -> avoid_localities=["madhapur"]
+
+        "I want to walk to work"
+        -> walk_to_work=true
+
+        "I am investing"
+        -> investment_focus=true
         """
-
+        
         try:
             response = self.model.generate_content(
-                contents=[
-                    {"role": "user", "parts": [f"{system_instruction}\n\nUSER MESSAGE: {user_message}"]}
-                ]
+                contents=[{"role": "user", "parts": [f"{system_instruction}\n\nUSER INPUT: {user_message}"]}],
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json",
+                    response_schema=MasterExtractionPayload
+                )
             )
             
-            # Sanitization logic block targeting clean JSON isolation
-            clean_text = response.text.strip()
-            if clean_text.startswith("```"):
-                clean_text = clean_text.split("```")[1]
-                if clean_text.startswith("json"):
-                    clean_text = clean_text[4:]
-            
-            extracted_json = json.loads(clean_text.strip())
-            return extracted_json
+            # Pure validation extraction using our schema definition model
+            validated = MasterExtractionPayload.model_validate_json(response.text.strip())
+            return validated.model_dump(exclude_none=True)
         except Exception:
-            # Fallback defensively if formatting or rate-limits hiccup during live evaluation
             return {}
 
 ai_extractor = AIExtractor()
