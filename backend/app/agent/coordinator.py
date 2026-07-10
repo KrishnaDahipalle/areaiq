@@ -69,6 +69,8 @@ class AreaIQAgentCoordinator:
             current_profile=
                 session.long_term_memory.extracted_profile
         )
+        print("\nEXTRACTED:")
+        print(extracted)
 
         if isinstance(extracted, dict):
 
@@ -82,11 +84,21 @@ class AreaIQAgentCoordinator:
                 session.session_id,
                 validated
             )
+            session = memory_manager.get_or_create_session(
+                user_id,
+                session_id
+            )
 
-        session = memory_manager.get_or_create_session(
-            user_id,
-            session_id
-        )
+            print("\nPROFILE:")
+            print(session.long_term_memory.extracted_profile)
+
+            print("\nMISSING:")
+            print(session.long_term_memory.missing_slots)
+
+            session = memory_manager.get_or_create_session(
+                user_id,
+                session_id
+            )
 
         long_term = session.long_term_memory
         short_term = session.short_term_memory
