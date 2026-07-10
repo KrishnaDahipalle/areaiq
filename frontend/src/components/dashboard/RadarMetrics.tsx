@@ -1,80 +1,156 @@
 "use client";
-import React from 'react';
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+
+import React from "react";
+import {
+  ResponsiveContainer,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  Legend,
+  Tooltip,
+} from "recharts";
 
 interface RadarMetricsProps {
   recommendedName: string;
   recommendedScores: Record<string, number>;
   allLocalities: Array<{
-    scores: Record<string, number>;
+    name: string;
+    id: string;
+    safety: number;
+    transit: number;
+    affordability: number;
+    lifestyle: number;
   }>;
 }
 
-export default function RadarMetrics({ recommendedName, recommendedScores, allLocalities }: RadarMetricsProps) {
-  const dimensions = ["safety", "education", "healthcare", "connectivity", "investment", "lifestyle"];
+export default function RadarMetrics({
+  recommendedName,
+  recommendedScores,
+  allLocalities,
+}: RadarMetricsProps) {
+  // Calculate aggregate baseline averages across all available localities
+  const totalCount = allLocalities.length || 1;
 
-  // Calculate the average city baseline dynamically across all 6 demo localities
-  const cityAverages = dimensions.reduce((acc, dim) => {
-    const total = allLocalities.reduce((sum, loc) => sum + (loc.scores[dim] || 0), 0);
-    acc[dim] = roundToOneDecimal(total / allLocalities.length);
-    return acc;
-  }, {} as Record<string, number>);
+  const cityAverages = allLocalities.reduce(
+    (acc, curr) => {
+      acc.Safety += curr.safety;
+      acc.Transit += curr.transit;
+      acc.Affordability += curr.affordability;
+      acc.Lifestyle += curr.lifestyle;
+      return acc;
+    },
+    {
+      Safety: 0,
+      Transit: 0,
+      Affordability: 0,
+      Lifestyle: 0,
+    }
+  );
 
-  // Format dataset for Recharts radar consumption mapping vectors
-  const formattedRadarData = dimensions.map(dim => {
+  // Radar chart dimensions
+  const axisKeys = [
+    "Safety",
+    "Transit",
+    "Affordability",
+    "Lifestyle",
+  ] as const;
+
+  const roundToTwo = (num: number) =>
+    Math.round((num + Number.EPSILON) * 100) / 100;
+
+  const transformedRadarPayload = axisKeys.map((key) => {
+    const recommendedValue =
+      recommendedScores[key] ??
+      recommendedScores[key.toLowerCase()] ??
+      5;
+
+    const computedAverage = cityAverages[key] / totalCount;
+
     return {
-      subject: dim.charAt(0).toUpperCase() + dim.slice(1),
-      [recommendedName]: recommendedScores[dim] || 0,
-      "City Average": cityAverages[dim] || 0,
+      subject: key,
+      [recommendedName]: recommendedValue,
+      "Hyderabad Average": roundToTwo(computedAverage),
     };
   });
 
-  function roundToOneDecimal(num: number): number {
-    return Math.round(num * 10) / 10;
-  }
-
   return (
-    <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-4">
+    <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl flex flex-col justify-between h-[360px]">
       <div>
-        <h3 className="text-sm uppercase tracking-wider font-bold text-slate-400">6-Dimensional Attribute Alignment Profile</h3>
-        <p className="text-xs text-slate-500 mt-0.5">Comparing match metrics against the standard city baseline score vector</p>
+        <h3 className="text-sm uppercase tracking-wider font-bold text-slate-400">
+          Attribute Vector Analysis
+        </h3>
+        <p className="text-xs text-slate-500 mt-0.5">
+          Dimensional suitability matrix compared against city-wide baselines
+        </p>
       </div>
 
-      {/* Recharts Core Radar Component */}
-      <div className="h-64 w-full flex items-center justify-center">
+      <div className="w-full h-[260px] flex items-center justify-center mt-2">
         <ResponsiveContainer width="100%" height="100%">
-          <RadarChart cx="50%" cy="50%" outerRadius="75%" data={formattedRadarData}>
+          <RadarChart
+            cx="50%"
+            cy="50%"
+            outerRadius="75%"
+            data={transformedRadarPayload}
+          >
             <PolarGrid stroke="#1e293b" />
-            <PolarAngleAxis dataKey="subject" stroke="#94a3b8" style={{ fontSize: '10px', fontWeight: '500' }} />
-            <PolarRadiusAxis angle={30} domain={[0, 10]} stroke="#334155" style={{ fontSize: '9px' }} tickCount={6} />
-            
-            <Tooltip
-              contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px' }}
-              itemStyle={{ fontSize: '11px', paddingTop: "1px", paddingBottom: "1px", }}
+
+            <PolarAngleAxis
+              dataKey="subject"
+              stroke="#94a3b8"
+              style={{
+                fontSize: "10px",
+                fontWeight: "bold",
+              }}
             />
-            
-            {/* The City Average Baseline Polygon Overlay Vector */}
-            <Radar
-              name="City Average"
-              dataKey="City Average"
-              stroke="#64748b"
-              fill="#64748b"
-              fillOpacity={0.1}
-              strokeWidth={1.5}
-              strokeDasharray="4 4"
+
+            <PolarRadiusAxis
+              angle={30}
+              domain={[0, 10]}
+              stroke="#475569"
+              style={{
+                fontSize: "9px",
+              }}
             />
-            
-            {/* The Target Recommended Area Polygon Overlay Vector */}
+
             <Radar
               name={recommendedName}
               dataKey={recommendedName}
-              stroke="#818cf8"
+              stroke="#6366f1"
               fill="#6366f1"
-              fillOpacity={0.35}
-              strokeWidth={2.5}
+              fillOpacity={0.25}
             />
-            
-            <Legend verticalAlign="bottom" height={20} iconType="square" wrapperStyle={{ fontSize: '11px', fontWeight: '600', paddingTop: '10px' }} />
+
+            <Radar
+              name="Hyderabad Average"
+              dataKey="Hyderabad Average"
+              stroke="#94a3b8"
+              fill="#94a3b8"
+              fillOpacity={0.05}
+              strokeDasharray="4 4"
+            />
+
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#0f172a",
+                borderColor: "#334155",
+                borderRadius: "8px",
+              }}
+              itemStyle={{
+                fontSize: "11px",
+                color: "#cbd5e1",
+              }}
+            />
+
+            <Legend
+              verticalAlign="bottom"
+              height={24}
+              iconType="circle"
+              wrapperStyle={{
+                fontSize: "10px",
+              }}
+            />
           </RadarChart>
         </ResponsiveContainer>
       </div>

@@ -1,316 +1,423 @@
-"use client";
-import React, { useState, useEffect, useRef } from 'react';
-import { ApiClient, ChatMessage, RecommendResponsePayload } from '../lib/api';
-import GrowthChart from '../components/dashboard/GrowthChart';
-import RadarMetrics from '../components/dashboard/RadarMetrics';
-import InsightsPanel from '../components/dashboard/InsightsPanel';
-import { Send, MapPin, TrendingUp, ShieldCheck, Activity } from 'lucide-react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { 
+  ApiClient, 
+  ChatResponsePayload, 
+  RecommendResponsePayload, 
+  ComparisonResponsePayload, 
+  ExplanationResponsePayload, 
+  ItineraryResponsePayload 
+} from '../lib/api'; 
 
 export default function Home() {
-  // Session Configuration Matrices
-  const [userId] = useState("hackathon_user_1");
-  const [sessionId] = useState("session_" + Math.random().toString(36).substr(2, 9));
-  
-  // UI & Asynchronous State Managers
-  const [inputValue, setInputValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [profileComplete, setProfileComplete] = useState(false);
-  const [missingSlots, setMissingSlots] = useState<string[]>(["purpose", "office_location", "budget", "family_details", "priorities"]);
-  
-  // Hardcoded references of our 6 demo areas to safely back up charts before full profile sync
-  const [allLocalitiesMaster, setAllLocalitiesMaster] = useState<any[]>([]);
-  
-  // Conversational Memory Context Triggers
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'assistant', content: 'Namaste! I am JD, your AreaIQ advisor. Let me help you relocate to Hyderabad. To find your ideal neighborhood match, tell me a little bit about the purpose of your move and where your office will be located.' }
+  // --- Persistent Workspace Session Anchors ---
+  const [userId] = useState<string>('hackathon_user_1');
+  const [sessionId] = useState<string>('session_abc123');
+
+  // --- Dynamic Interface Data Framework States ---
+  const [chatInput, setChatInput] = useState<string>('');
+  const [chatLogs, setChatLogs] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([
+    {
+      role: 'assistant',
+      content: "Namaste! I am JD, your AreaIQ advisor. Let me help you relocate to Hyderabad. To find your ideal neighborhood match, tell me a little bit about the purpose of your move and where your office will be located."
+    }
   ]);
 
-  // Analytics Dashboard Engine Payload State
-  const [analyticsData, setAnalyticsData] = useState<RecommendResponsePayload | null>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const [missingSlots, setMissingSlots] = useState<string[]>(['purpose', 'office_location', 'budget', 'family_details', 'priorities']);
+  const [isProfileComplete, setIsProfileComplete] = useState<boolean>(false);
+  const [currentStage, setCurrentStage] = useState<string>('COLLECTING_PROFILE');
 
-  // Populate master list fallback properties so selections render on mount
-  useEffect(() => {
-    const fetchBaselineLocalities = async () => {
-      try {
-        const ids = ["madhapur", "gachibowli", "kondapur", "hitech_city", "jubilee_hills", "kukatpally"];
-        const resolved = await Promise.all(ids.map(id => ApiClient.getLocalityData(id)));
-        setAllLocalitiesMaster(resolved);
-      } catch (e) {
-        console.error("Baseline fetch deferred until server link is operational", e);
-      }
-    };
-    fetchBaselineLocalities();
-  }, []);
+  // --- Advanced Deep Analytic Microservice Results States ---
+  const [recommendations, setRecommendations] = useState<RecommendResponsePayload | null>(null);
+  const [activeItinerary, setActiveItinerary] = useState<ItineraryResponsePayload | null>(null);
+  const [activeExplanation, setActiveExplanation] = useState<ExplanationResponsePayload | null>(null);
+  const [comparisonPayload, setComparisonPayload] = useState<ComparisonResponsePayload | null>(null);
+  const [comparisonTarget, setComparisonTarget] = useState<string>('gachibowli'); // Default comparison baseline node
 
-  // Auto-scroll chat window when new elements appear
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'matrix' | 'itinerary' | 'comparison'>('matrix');
 
-  // Handle Conversational Form Submissions
+  // --- Dispatches Conversational Inputs Into the AI Agent Loop ---
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim() || isLoading) return;
+    if (!chatInput.trim() || isLoading) return;
 
-    const userText = inputValue.trim();
-    setInputValue("");
-    setMessages(prev => [...prev, { role: 'user', content: userText }]);
+    const userMessage = chatInput.trim();
+    setChatInput('');
+    setChatLogs((prev) => [...prev, { role: 'user', content: userMessage }]);
     setIsLoading(true);
 
     try {
-      // 1. Dispatch chat vector text straight to the FastAPI router
-      const chatResponse = await ApiClient.sendChatMessage({
+      const response: ChatResponsePayload = await ApiClient.sendChatMessage({
         user_id: userId,
         session_id: sessionId,
-        message: userText
+        message: userMessage
       });
 
-      setMessages(prev => [...prev, { role: 'assistant', content: chatResponse.reply }]);
-      setProfileComplete(chatResponse.profile_complete);
-      setMissingSlots(chatResponse.missing_slots);
+      setChatLogs((prev) => [...prev, { role: 'assistant', content: response.reply }]);
+      setMissingSlots(response.missing_slots);
+      setIsProfileComplete(response.profile_complete);
+      setCurrentStage(response.current_stage);
 
-      // 2. Continuous Evaluation: If profile matrix criteria check satisfies, trigger the rank calculations
-      if (chatResponse.profile_complete || chatResponse.missing_slots.length === 0) {
-        const recommendations = await ApiClient.getRecommendations(userId, sessionId);
-        setAnalyticsData(recommendations);
+      // Trigger structural recalculation immediately if the agent loop finishes slot allocation
+      if (response.profile_complete || response.current_stage === 'EVALUATION') {
+        await triggerEngineEvaluation();
       }
-    } catch (error) {
-      console.error("Communication pipeline failure:", error);
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Connection timed out briefly. Could you clarify your budget targets for me again?' }]);
+    } catch (err) {
+      console.error("Agent workflow execution breakdown:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Helper function to force bypass profile checks during a live presentation judge panel run
-  const forceTriggerEvaluation = async () => {
+  // --- Triggers the Core Multi-Criteria Scoring Optimization Array ---
+  const triggerEngineEvaluation = async () => {
     setIsLoading(true);
     try {
-      const recommendations = await ApiClient.getRecommendations(userId, sessionId);
-      setAnalyticsData(recommendations);
-      setProfileComplete(true);
-      setMissingSlots([]);
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Force-compiling all locality intelligence calculations down onto the workspace interface panels right now.' }]);
-    } catch (error) {
-      console.error("Bypass configuration route failure:", error);
+      const recData = await ApiClient.getRecommendations(userId, sessionId);
+      setRecommendations(recData);
+
+      if (recData.recommended_locality) {
+        const primaryId = recData.recommended_locality.locality_id;
+        
+        // Execute supplementary analytics requests concurrently
+        const [itineraryRes, explainRes, compareRes] = await Promise.all([
+          ApiClient.getItinerary(primaryId),
+          ApiClient.getExplanation(userId, sessionId, primaryId),
+          ApiClient.compareLocalities(primaryId, comparisonTarget)
+        ]);
+
+        setActiveItinerary(itineraryRes);
+        setActiveExplanation(explainRes);
+        setComparisonPayload(compareRes);
+      }
+    } catch (err) {
+      console.error("Analytical calculation stack processing fault:", err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // --- Toggles Comparison Benchmarks Dynamically via Selection Arrays ---
+  const executeNewComparison = async (targetId: string) => {
+    if (!recommendations) return;
+    setComparisonTarget(targetId);
+    try {
+      const primaryId = recommendations.recommended_locality.locality_id;
+      const compareRes = await ApiClient.compareLocalities(primaryId, targetId);
+      setComparisonPayload(compareRes);
+    } catch (err) {
+      console.error("Comparative node reload mapping failure:", err);
     }
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
-      {/* Structural Global Navigation Banner */}
-      <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-xl flex items-center justify-center font-black tracking-tighter text-white shadow-lg shadow-indigo-500/10">IQ</div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              AreaIQ <span className="text-xs bg-indigo-500/10 text-indigo-400 font-medium px-2 py-0.5 rounded-full border border-indigo-500/20">Hyderabad Core v1</span>
-            </h1>
-          </div>
+    <main className="min-h-screen bg-slate-950 text-slate-100 font-sans p-6 selection:bg-teal-500 selection:text-slate-950">
+      {/* HEADER BAR */}
+      <header className="flex justify-between items-center border-b border-slate-800 pb-4 mb-6">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">
+            AreaIQ Hyderabad Core
+          </h1>
+          <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-mono">
+            Scalable Locality Intelligence Decision Matrix Infrastructure
+          </p>
         </div>
-        
-        {/* State Monitoring Badges */}
-        <div className="flex items-center gap-4">
-          <div className="flex gap-2">
-            {missingSlots.map(slot => (
-              <span key={slot} className="text-[10px] uppercase tracking-wider font-semibold px-2.5 py-1 bg-slate-800 text-slate-400 rounded-md border border-slate-700/60">
-                • {slot.replace('_', ' ')}
-              </span>
-            ))}
-            {profileComplete && (
-              <span className="text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 bg-emerald-500/10 text-emerald-400 rounded-md border border-emerald-500/20 animate-pulse">
-                ✓ Matrix Complete
-              </span>
-            )}
-          </div>
-          <button 
-            onClick={forceTriggerEvaluation} 
-            className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-3 py-1.5 rounded-lg border border-slate-700 transition"
-          >
-            Skip to Dashboard
-          </button>
-        </div>
+        <button 
+          onClick={triggerEngineEvaluation}
+          className="px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-sm font-semibold rounded-lg transition-all shadow-lg shadow-teal-950/40 border border-teal-500/20"
+        >
+          Skip to Dashboard (Mock Data Evaluation)
+        </button>
       </header>
 
-      {/* Primary Workspace Grid Construction */}
-      <div className="flex-1 grid grid-cols-1 xl:grid-cols-12 overflow-hidden max-h-[calc(100vh-69px)]">
+      {/* CORE CONTROL GRID LAYOUT */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* PANEL A: Conversational Consultant Section (4 Columns) */}
-        <section className="xl:col-span-4 border-r border-slate-800 bg-slate-900/20 flex flex-col h-full justify-between overflow-hidden">
-          <div className="p-4 border-b border-slate-800 bg-slate-900/40 flex items-center gap-2">
-            <Activity className="h-4 w-4 text-indigo-400" />
-            <h2 className="text-xs uppercase tracking-wider font-bold text-slate-400">Advisor Context Console</h2>
-          </div>
-          
-          {/* Chat Stream History Container */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-4 max-h-[calc(100vh-210px)]">
-            {messages.map((msg, idx) => (
-              <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] rounded-2xl p-4 text-sm leading-relaxed ${
-                  msg.role === 'user' 
-                    ? 'bg-indigo-600 text-white rounded-br-none shadow-md shadow-indigo-600/10' 
-                    : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none'
-                }`}>
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
+        {/* LEFT COLUMN: THE ADVISOR INTEGRATED CONVERSATION STREAM */}
+        <section className="lg:col-span-4 bg-slate-900/60 rounded-xl border border-slate-800 backdrop-blur-md p-5 h-[calc(100vh-140px)] flex flex-col justify-between shadow-2xl">
+          <div>
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3 mb-4">
+              <h2 className="text-lg font-bold tracking-tight text-teal-400 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+                Advisor Context Console
+              </h2>
+              <span className="text-xs bg-slate-800 text-slate-300 font-mono px-2 py-0.5 rounded border border-slate-700">
+                {currentStage}
+              </span>
+            </div>
+
+            {/* MESSAGE TRACK DISPLAY */}
+            <div className="space-y-4 overflow-y-auto max-h-[50vh] pr-2 scrollbar-thin scrollbar-thumb-slate-800">
+              {chatLogs.map((msg, index) => (
+                <div key={index} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  <span className="text-[10px] font-mono uppercase text-slate-500 mb-1">
+                    {msg.role === 'user' ? 'Client Request' : 'JD / Advisor'}
+                  </span>
+                  <div className={`text-sm p-3 rounded-xl max-w-[90%] font-medium leading-relaxed shadow-sm ${
+                    msg.role === 'user' 
+                      ? 'bg-teal-600 text-slate-900 rounded-tr-none font-semibold' 
+                      : 'bg-slate-800 border border-slate-700/60 text-slate-200 rounded-tl-none'
+                  }`}>
+                    {msg.content}
+                  </div>
                 </div>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl rounded-bl-none p-4 flex gap-1.5 items-center">
-                  <span className="h-2 w-2 rounded-full bg-indigo-500 animate-bounce delay-100"></span>
-                  <span className="h-2 w-2 rounded-full bg-indigo-500 animate-bounce delay-200"></span>
-                  <span className="h-2 w-2 rounded-full bg-indigo-500 animate-bounce delay-300"></span>
-                </div>
-              </div>
-            )}
-            <div ref={chatEndRef} />
+              ))}
+            </div>
           </div>
 
-          {/* Message Input Interface Block */}
-          <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-800 bg-slate-950/80">
-            <div className="relative flex items-center">
-              <input
+          {/* LOWER INTERACTION INTERACTION LAYER */}
+          <div className="mt-4 pt-4 border-t border-slate-800">
+            {/* INPUT FIELD BUFFER SHEET */}
+            <form onSubmit={handleSendMessage} className="relative flex items-center mb-3">
+              <input 
                 type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder={profileComplete ? "Profile fully satisfied..." : "Type parameters to advise JD..."}
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder={isLoading ? "Processing constraints..." : "Type parameters to advise..."}
                 disabled={isLoading}
-                className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-xl pl-4 pr-12 py-3.5 text-sm focus:outline-none transition placeholder:text-slate-500 text-slate-100"
+                className="w-full bg-slate-950 border border-slate-800 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 rounded-lg pl-3 pr-10 py-2.5 text-sm outline-none transition-all placeholder:text-slate-600"
               />
               <button 
                 type="submit" 
-                disabled={isLoading || !inputValue.trim()}
-                className="absolute right-2 p-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 text-white rounded-lg transition"
+                className="absolute right-2 p-1.5 text-teal-400 hover:text-teal-300 transition-colors"
               >
-                <Send className="h-4 w-4" />
+                ⚡
               </button>
+            </form>
+
+            {/* REAL-TIME MATRIX EXTRACTION CHECKBOX SLOTS TRACKER */}
+            <div>
+              <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500 block mb-2">
+                Awaiting Criteria Profiles
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {['purpose', 'office_location', 'budget', 'family_details', 'priorities'].map((slot) => {
+                  const isMissing = missingSlots.includes(slot);
+                  return (
+                    <span 
+                      key={slot}
+                      className={`text-[10px] font-mono px-2 py-0.5 rounded transition-all duration-300 ${
+                        isMissing 
+                          ? 'bg-slate-950 text-slate-600 border border-slate-900 line-through' 
+                          : 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 font-semibold'
+                      }`}
+                    >
+                      {isMissing ? '✕' : '✓'} {slot.replace('_', ' ')}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
-          </form>
+          </div>
         </section>
 
-        {/* PANEL B: Comparative Analytics Workspace Section (8 Columns) */}
-        <section className="xl:col-span-8 bg-slate-950 overflow-y-auto p-6 space-y-6">
-          {!analyticsData ? (
-            <div className="h-full flex flex-col items-center justify-center text-center p-8 max-w-md mx-auto my-12">
-              <div className="h-14 w-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400 mb-4 shadow-inner">
-                <MapPin className="h-6 w-6 animate-pulse" />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Awaiting Criteria Profiles</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Provide moving details via the conversational agent console. Once requirements are gathered, the engine calculates suitability rankings across the 6 target corridors.
-              </p>
+        {/* RIGHT COLUMN: DECISION ENGINE MATRIX INTERACTIVE RENDERING BOARDS */}
+        <section className="lg:col-span-8 space-y-6">
+          {!recommendations ? (
+            <div className="bg-slate-900/30 rounded-xl border border-slate-900 p-12 text-center text-slate-500">
+              <div className="text-3xl mb-3">📊</div>
+              <p className="text-sm font-medium">Provide moving details via the conversational agent console.</p>
+              <p className="text-xs text-slate-600 mt-1">Once requirements are gathered, the engine calculates suitability rankings across the target corridors.</p>
             </div>
           ) : (
-            <div className="space-y-6 animate-fadeIn">
-              
-              {/* KPI Summary Block Rows */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl flex flex-col justify-between">
-                  <span className="text-xs uppercase tracking-wider font-bold text-slate-400 flex items-center gap-2">
-                    <MapPin className="h-3.5 w-3.5 text-indigo-400" /> Primary Match Neighborhood
-                  </span>
-                  <div className="mt-4">
-                    <h4 className="text-2xl font-black text-white tracking-tight">{analyticsData.recommended_locality.name}</h4>
-                    <p className="text-xs text-indigo-400 font-semibold mt-1">Global Suitability Index Peak Match</p>
-                  </div>
+            <>
+              {/* PRIMARY HIGHLIGHT MATRIX HERO BAR */}
+              <div className="bg-gradient-to-br from-slate-900 to-slate-950 rounded-xl border border-slate-800 p-6 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-3 bg-teal-500/10 text-teal-400 font-mono text-xs uppercase tracking-wider border-l border-b border-slate-800 rounded-bl-xl font-bold">
+                  Top Engine Match
                 </div>
-
-                <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl flex flex-col justify-between">
-                  <span className="text-xs uppercase tracking-wider font-bold text-slate-400 flex items-center gap-2">
-                    <TrendingUp className="h-3.5 w-3.5 text-emerald-400" /> Suitability Probability Yield
-                  </span>
-                  <div className="mt-4">
-                    <h4 className="text-4xl font-black text-emerald-400 tracking-tight">{analyticsData.recommended_locality.global_utility_score || analyticsData.recommended_locality.global_suitability_score}%</h4>
-                    <p className="text-xs text-slate-400 mt-1">MCDA Algorithm Score Optimization Value</p>
-                  </div>
+                <span className="text-xs font-mono uppercase tracking-widest text-teal-400 block mb-1">
+                  Optimized Core Corridor Match
+                </span>
+                <h2 className="text-4xl font-extrabold text-white tracking-tight">
+                  {recommendations.recommended_locality.name}
+                </h2>
+                <div className="text-2xl font-black text-emerald-400 mt-2 font-mono">
+                  {recommendations.recommended_locality.global_suitability_score}% Match Index
                 </div>
-
-                <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl flex flex-col justify-between">
-                  <span className="text-xs uppercase tracking-wider font-bold text-slate-400 flex items-center gap-2">
-                    <ShieldCheck className="h-3.5 w-3.5 text-violet-400" /> Boundary Conflicts Captured
-                  </span>
-                  <div className="mt-4">
-                    <h4 className="text-4xl font-black text-white tracking-tight">{analyticsData.conflicts_detected.length}</h4>
-                    <p className="text-xs text-slate-400 mt-1">Active constraint warning events logged</p>
-                  </div>
-                </div>
+                <p className="text-xs text-slate-400 mt-3 border-t border-slate-800/60 pt-3 leading-relaxed font-medium bg-slate-950/40 p-3 rounded-lg border border-slate-800/40">
+                  <span className="font-bold font-mono text-teal-500 block text-[10px] uppercase mb-1">Engine Mathematical Breakdown:</span>
+                  {recommendations.recommended_locality.calculation_explanation}
+                </p>
               </div>
 
-              {/* Graphical Visualization Row Split */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {allLocalitiesMaster.length > 0 && (
-                  <GrowthChart localitiesData={allLocalitiesMaster} />
-                )}
-                {allLocalitiesMaster.length > 0 && (
-                  <RadarMetrics 
-                    recommendedName={analyticsData.recommended_locality.name}
-                    recommendedScores={analyticsData.recommended_locality.dimension_scores}
-                    allLocalities={allLocalitiesMaster}
-                  />
-                )}
+              {/* DYNAMIC TAB CONTROLLER */}
+              <div className="flex border-b border-slate-800 gap-2">
+                {(['matrix', 'itinerary', 'comparison'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all border-b-2 -mb-[2px] ${
+                      activeTab === tab
+                        ? 'border-teal-500 text-teal-400 bg-slate-900/40'
+                        : 'border-transparent text-slate-500 hover:text-slate-300'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
               </div>
 
-              {/* Horizontal Rankings Bar Progress Container */}
-              <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-4">
-                <h3 className="text-sm uppercase tracking-wider font-bold text-slate-400">Locality Suitability Priority Rankings Matrix</h3>
-                <div className="space-y-3.5">
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-semibold">
-                      <span className="text-white flex items-center gap-2">🥇 {analyticsData.recommended_locality.name}</span>
-                      <span className="text-indigo-400">{analyticsData.recommended_locality.global_suitability_score}%</span>
-                    </div>
-                    <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
-                      <div className="bg-gradient-to-r from-indigo-500 to-violet-500 h-full rounded-full transition-all duration-500" style={{ width: `${analyticsData.recommended_locality.global_suitability_score}%` }}></div>
+              {/* VIEW PANEL 1: SUITABILITY SCORE MATRICES */}
+              {activeTab === 'matrix' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* ALTERNATIVES SUITABILITY TRACK ROWS */}
+                  <div className="bg-slate-900/50 rounded-xl border border-slate-800 p-5 shadow-md">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-800 pb-2">
+                      Ranked System Alternatives
+                    </h3>
+                    <div className="space-y-3">
+                      {recommendations.ranked_alternatives.map((alt) => (
+                        <div key={alt.locality_id} className="bg-slate-950 border border-slate-800/60 p-3 rounded-lg flex justify-between items-center">
+                          <div>
+                            <div className="text-sm font-bold text-white">{alt.name}</div>
+                            <div className="text-[10px] text-slate-500 truncate max-w-[200px] font-mono mt-0.5">{alt.locality_id}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-bold font-mono text-teal-400">{alt.global_suitability_score}%</div>
+                            <span className="text-[9px] bg-slate-900 px-1.5 py-0.5 border border-slate-800 rounded font-mono text-slate-400">Score Matrix</span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
 
-                  {analyticsData.ranked_alternatives.map((alt, index) => (
-                    <div key={alt.locality_id} className="space-y-1.5">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-300">#{index + 2} {alt.name}</span>
-                        <span className="text-slate-400">{alt.global_suitability_score}%</span>
+                  {/* ADVISOR MATRIX ANALYSIS BLOCK */}
+                  <div className="bg-slate-900/50 rounded-xl border border-slate-800 p-5 shadow-md flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-800 pb-2">
+                        Strategic Alignment Analysis
+                      </h3>
+                      {activeExplanation ? (
+                        <div className="space-y-3">
+                          <p className="text-xs italic text-slate-400 border-l-2 border-teal-500 pl-3 py-1 bg-slate-950/50 p-2 rounded-r-lg">
+                            "{activeExplanation.summary}"
+                          </p>
+                          <div className="space-y-1.5 pt-2">
+                            {activeExplanation.explanation.map((reason, i) => (
+                              <div key={i} className="text-xs text-slate-300 flex items-start gap-2 bg-slate-950/30 p-2 rounded border border-slate-800/30">
+                                <span className="text-teal-400 mt-0.5">✦</span>
+                                <span>{reason}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-slate-600 font-mono">Generating vector explanations...</div>
+                      )}
+                    </div>
+                    
+                    {/* SYSTEM CONSTRAINT CONFLICTS BLOCK */}
+                    {recommendations.conflicts_detected.length > 0 && (
+                      <div className="mt-4 p-3 bg-red-950/20 border border-red-900/40 rounded-lg">
+                        <span className="text-[10px] uppercase font-mono tracking-widest text-red-400 block mb-1 font-bold">
+                          Detected Budget Anomalies
+                        </span>
+                        {recommendations.conflicts_detected.map((conflict, i) => (
+                          <div key={i} className="text-[11px] text-red-300 leading-relaxed">
+                            ⚠️ {conflict}
+                          </div>
+                        ))}
                       </div>
-                      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                        <div className="bg-slate-600 h-full rounded-full transition-all duration-500" style={{ width: `${alt.global_suitability_score}%` }}></div>
-                      </div>
-                    </div>
-                  ))}
+                    )}
+                  </div>
                 </div>
-              </div>
-
-              {/* Qualitative assessment details layout breakdown */}
-              {allLocalitiesMaster.length > 0 && (
-                <InsightsPanel 
-                  recommendedLocality={{
-                    ...allLocalitiesMaster.find(l => l.id === analyticsData.recommended_locality.locality_id),
-                    name: analyticsData.recommended_locality.name,
-                    pros: allLocalitiesMaster.find(l => l.id === analyticsData.recommended_locality.locality_id)?.pros || [],
-                    cons: allLocalitiesMaster.find(l => l.id === analyticsData.recommended_locality.locality_id)?.cons || [],
-                    ai_insights_anchor: analyticsData.recommended_locality.calculation_explanation
-                  }} 
-                />
               )}
 
-              {/* Active Constraints Alerts & Logs */}
-              {analyticsData.conflicts_detected.length > 0 && (
-                <div className="bg-amber-500/5 border border-amber-500/20 p-5 rounded-xl">
-                  <h3 className="text-xs uppercase tracking-wider font-bold text-amber-400 mb-2">Automated Optimization Conflict Warnings</h3>
-                  <ul className="text-xs text-amber-300/80 space-y-1.5 list-disc pl-4">
-                    {analyticsData.conflicts_detected.map((conf, index) => (
-                      <li key={index} className="leading-relaxed">{conf}</li>
-                    ))}
-                  </ul>
+              {/* VIEW PANEL 2: ASSET NEIGHBORHOOD EXPLORATION TIMELINES */}
+              {activeTab === 'itinerary' && (
+                <div className="bg-slate-900/50 rounded-xl border border-slate-800 p-5 shadow-md">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-800 pb-2">
+                    Physical Field Verification Dossier
+                  </h3>
+                  {activeItinerary ? (
+                    <div className="space-y-4 relative before:absolute before:left-4 before:top-2 before:bottom-2 before:w-[1px] before:bg-slate-800">
+                      {activeItinerary.itinerary.map((item, index) => (
+                        <div key={index} className="relative pl-10 group">
+                          <div className="absolute left-2.5 top-1.5 w-3 h-3 rounded-full bg-slate-950 border border-teal-400 group-hover:bg-teal-400 transition-colors duration-300" />
+                          <div className="bg-slate-950 border border-slate-800/70 p-3 rounded-lg hover:border-slate-700 transition-colors shadow-sm">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs font-black font-mono text-teal-400">{item.time}</span>
+                              <span className="text-[10px] font-mono bg-slate-900 text-slate-400 px-2 py-0.5 border border-slate-800 rounded font-bold uppercase">{item.milestone}</span>
+                            </div>
+                            <p className="text-xs text-slate-300 leading-relaxed font-medium">{item.activity}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-xs text-slate-600 font-mono">Compiling local exploration grids...</div>
+                  )}
                 </div>
               )}
 
-            </div>
+              {/* VIEW PANEL 3:Granular NODE-TO-NODE VARIANCES */}
+              {activeTab === 'comparison' && (
+                <div className="bg-slate-900/50 rounded-xl border border-slate-800 p-5 shadow-md space-y-4">
+                  <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">
+                      Cross-Corridor Parametric Divergence
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-500 font-mono">Contrast Target:</span>
+                      <select 
+                        value={comparisonTarget}
+                        onChange={(e) => executeNewComparison(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-teal-400 outline-none font-bold"
+                      >
+                        {recommendations.ranked_alternatives.map((alt) => (
+                          <option key={alt.locality_id} value={alt.locality_id}>
+                            {alt.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {comparisonPayload ? (
+                    <div className="space-y-4">
+                      {/* STATS COMPARISON MATRIX GRID */}
+                      <div className="overflow-hidden border border-slate-800 rounded-lg bg-slate-950 text-xs">
+                        <div className="grid grid-cols-4 bg-slate-900 p-2.5 font-mono uppercase font-bold text-slate-400 text-[10px] tracking-wider border-b border-slate-800">
+                          <div>Dimension</div>
+                          <div className="text-center text-white">{comparisonPayload.locality_1_meta.name}</div>
+                          <div className="text-center text-teal-400">{comparisonPayload.locality_2_meta.name}</div>
+                          <div className="text-center">Variance</div>
+                        </div>
+                        {Object.entries(comparisonPayload.dimensional_matrix).map(([dim, data]) => (
+                          <div key={dim} className="grid grid-cols-4 p-2.5 border-b border-slate-900 last:border-0 hover:bg-slate-900/40 font-medium">
+                            <div className="capitalize font-semibold text-slate-400">{dim}</div>
+                            <div className="text-center text-white font-mono">{data.locality_1_value}</div>
+                            <div className="text-center text-teal-400 font-mono">{data.locality_2_value}</div>
+                            <div className={`text-center font-mono font-bold ${data.variance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {data.variance >= 0 ? `+${data.variance}` : data.variance}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* FINANCIAL SPREAD ADVISOR SUMMARY BOX */}
+                      <div className="bg-slate-950 border border-slate-800 p-3 rounded-lg text-xs leading-relaxed flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                        <div>
+                          <span className="font-bold text-slate-400 uppercase tracking-widest text-[9px] font-mono block mb-0.5">Financial Variance Conclusion:</span>
+                          <span className="text-slate-300 font-medium">{comparisonPayload.summary.structural_verdict}</span>
+                        </div>
+                        <div className="bg-slate-900 px-3 py-1.5 rounded border border-slate-800 text-right shrink-0">
+                          <span className="text-[9px] text-slate-500 font-mono uppercase block">3BHK Cost Delta</span>
+                          <span className="font-mono font-bold text-teal-400">{Math.abs(comparisonPayload.financial_variance.rent_3bhk_delta_inr).toLocaleString('en-IN')} INR / Mo</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-slate-600 font-mono">Re-indexing variance arrays...</div>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </section>
-        
       </div>
     </main>
   );

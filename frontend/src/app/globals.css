@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom application scrollbar metrics for code console zones */
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: rgb(15, 23, 42); /* slate-900 */
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgb(30, 41, 59); /* slate-800 */
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgb(47, 73, 117);
+  }
+}
+
+body {
+  background-color: rgb(2, 6, 23); /* slate-950 fallback binding */
+  color: rgb(241, 245, 249); /* slate-100 */
+  overflow-x: hidden;
+}
