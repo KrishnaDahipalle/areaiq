@@ -9,6 +9,7 @@ from app.agent.executor import tool_executor
 from app.agent.critic import critic_agent
 from app.agent.response_builder import response_builder
 from app.services.context_service import context_service
+from app.services.persona_service import persona_service
 
 logger = logging.getLogger("AreaIQAgentCoordinator")
 
@@ -141,16 +142,50 @@ class AreaIQAgentCoordinator:
 
         if plan.get("requires_more_info"):
 
-            reply = response_builder.build_response(
-                user_message=sanitized_text,
-                profile=long_term.extracted_profile,
-                plan=plan,
-                tool_result={
-                    "success": False,
-                    "message":
-                        "Need more information."
-                }
+            persona = (
+                long_term.extracted_profile
+                .get("persona")
             )
+
+            missing = (
+                long_term.missing_slots
+            )
+
+            if persona:
+
+                reply = (
+                    persona_service
+                    .next_question(persona)
+                )
+
+            elif "purpose" in missing:
+
+                reply = (
+                    "What are you looking to do?\n\n"
+                    "• Relocate for work\n"
+                    "• Find a rental\n"
+                    "• Buy property\n"
+                    "• Open a business\n"
+                    "• Explore investment opportunities"
+                )
+
+            elif "budget" in missing:
+
+                reply = (
+                    "What's your monthly budget?"
+                )
+
+            elif "family_details" in missing:
+
+                reply = (
+                    "Will you be moving alone or with family?"
+                )
+
+            else:
+
+                reply = (
+                    "Tell me a bit more about your requirements."
+                )
 
             memory_manager.add_message_to_buffer(
                 session.session_id,

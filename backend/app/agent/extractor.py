@@ -55,6 +55,36 @@ class AIExtractor:
         
         If an attribute is populated in the state register, keep it unless overridden explicitly.
 
+        Infer persona.
+        Possible values:
+
+        WORKING_PROFESSIONAL
+        FAMILY
+        STUDENT
+        INVESTOR
+        BUSINESS_OWNER
+        TENANT
+
+        Examples:
+
+        "I am moving for work"
+        -> persona = WORKING_PROFESSIONAL
+
+        "I want to buy property"
+        -> persona = INVESTOR
+
+        "I am moving with my wife and kids"
+        -> persona = FAMILY
+
+        "I want to open a restaurant"
+        -> persona = BUSINESS_OWNER
+
+        "I need a rental"
+        -> persona = TENANT
+
+        "I am joining college"
+        -> persona = STUDENT
+
         Also extract lifestyle preferences.
 
         Examples:
@@ -93,6 +123,7 @@ class AIExtractor:
             Schema:
 
             {{
+            "persona":null,
             "purpose": null,
             "office_location": null,
             "budget": {{
