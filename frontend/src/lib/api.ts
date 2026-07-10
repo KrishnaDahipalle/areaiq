@@ -75,7 +75,7 @@ export interface ItineraryResponsePayload {
 }
 
 export class ApiClient {
-  private static BASE_URL = "http://localhost:8000/api/v1";
+  private static BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1';
 
   private static async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const response = await fetch(`${this.BASE_URL}${endpoint}`, {
