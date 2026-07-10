@@ -1,0 +1,284 @@
+{
+  "last_updated": "2026-07-10T12:00:00Z",
+  "country_code": "IN",
+  "state_code": "TS",
+  "city_name": "Hyderabad",
+  "localities": [
+    {
+      "id": "madhapur",
+      "name": "Madhapur",
+      "overview": "The pulsing epicenter of Hyderabad's tech landscape around Mindspace IT Park. Highly energetic commercial atmosphere dominated by corporate workspaces, cafes, and walk-to-work options.",
+      "scores": {
+        "safety": 8.5,
+        "education": 7.5,
+        "healthcare": 8.0,
+        "connectivity": 9.5,
+        "investment": 9.0,
+        "lifestyle": 9.5
+      },
+      "prices": {
+        "avg_price_per_sqft": 13900,
+        "rent_2bhk_avg": 43000,
+        "rent_3bhk_avg": 60000,
+        "market_tier": "Premium"
+      },
+      "growth_analytics": {
+        "market_status": "Steady Growth",
+        "cagr_5_year_pct": 15.5,
+        "time_series_data": {
+          "2022": 7800,
+          "2023": 9100,
+          "2024": 11200,
+          "2025": 13300,
+          "2026": 13900
+        }
+      },
+      "amenities": {
+        "schools": ["Manthan International School", "Meridian School"],
+        "hospitals": ["Medicover Hospitals", "Hedge Hospital"],
+        "metro_stations": ["Madhapur Metro", "Hitech City Metro"]
+      },
+      "pros": [
+        "Unbeatable walk-to-work options for major tech hubs.",
+        "Exceptional social profile with dense concentration of high-end eateries.",
+        "Excellent blue line metro train accessibility."
+      ],
+      "cons": [
+        "Substantial rush-hour gridlock on main structural stretches.",
+        "High localized ambient noise thresholds.",
+        "Extremely low inventory of standalone independent villas."
+      ],
+      "ai_insights_anchor": "Optimal match for young single professionals or dual-income tech couples who favor dynamic social scenes and brief commutes over sprawling residential yards."
+    },
+    {
+      "id": "gachibowli",
+      "name": "Gachibowli",
+      "overview": "A vast, modern corporate and institutional district featuring large campus-style gated communities catering to tech executives and families.",
+      "scores": {
+        "safety": 9.0,
+        "education": 9.0,
+        "healthcare": 9.5,
+        "connectivity": 9.0,
+        "investment": 9.2,
+        "lifestyle": 8.0
+      },
+      "prices": {
+        "avg_price_per_sqft": 11220,
+        "rent_2bhk_avg": 40000,
+        "rent_3bhk_avg": 55000,
+        "market_tier": "Premium"
+      },
+      "growth_analytics": {
+        "market_status": "Aggressive Growth",
+        "cagr_5_year_pct": 12.8,
+        "time_series_data": {
+          "2022": 6900,
+          "2023": 8200,
+          "2024": 9900,
+          "2025": 10400,
+          "2026": 11200
+        }
+      },
+      "amenities": {
+        "schools": ["Chirec International School", "Oakridge International"],
+        "hospitals": ["AIG Hospitals", "Continental Hospitals"],
+        "metro_stations": ["Raidurg Metro"]
+      },
+      "pros": [
+        "Wider roads, superior planned layout infrastructure, and expansive setups.",
+        "Immediate proximity to multi-specialty healthcare and top-ranked schools.",
+        "Seamless connectivity directly to the Outer Ring Road (ORR)."
+      ],
+      "cons": [
+        "Requires traveling out of the immediate sector for intense nightlife.",
+        "High broker dependence for local housing options.",
+        "Massive community layout blocks reduce casual pedestrian options."
+      ],
+      "ai_insights_anchor": "Highly recommended for families prioritizing top-tier international schooling and modern medical options within a clean, manicured ecosystem."
+    },
+    {
+      "id": "kondapur",
+      "name": "Kondapur",
+      "overview": "A highly balanced residential zone flanking the core IT corridor, bridging corporate infrastructure with dense localized local markets.",
+      "scores": {
+        "safety": 8.5,
+        "education": 8.5,
+        "healthcare": 8.0,
+        "connectivity": 8.5,
+        "investment": 8.8,
+        "lifestyle": 8.5
+      },
+      "prices": {
+        "avg_price_per_sqft": 10540,
+        "rent_2bhk_avg": 35000,
+        "rent_3bhk_avg": 48000,
+        "market_tier": "Mid-Range"
+      },
+      "growth_analytics": {
+        "market_status": "Aggressive Growth",
+        "cagr_5_year_pct": 16.1,
+        "time_series_data": {
+          "2022": 5800,
+          "2023": 7100,
+          "2024": 8500,
+          "2025": 9900,
+          "2026": 10540
+        }
+      },
+      "amenities": {
+        "schools": ["Arbor International School", "Mount Litera Zee School"],
+        "hospitals": ["KIMS Kondapur", "Star Hospitals"],
+        "metro_stations": ["Kondapur Metro Station (Proposed Extension)"]
+      },
+      "pros": [
+        "Highly competitive entry values per sqft compared to neighboring clusters.",
+        "Densely supplied with daily convenient retail hubs and vegetable markets.",
+        "Direct borders with the Botanical Gardens providing functional green cover."
+      ],
+      "cons": [
+        "High residential density creates evening block congestion on secondary links.",
+        "Fewer ultra-luxury massive standard setups.",
+        "Occasional dependency on domestic tanker supply elements during dry summer peaks."
+      ],
+      "ai_insights_anchor": "Excellent default balancing tier for corporate tech employees who want to optimize their monthly rental outflow while remaining close to work."
+    },
+    {
+      "id": "hitech_city",
+      "name": "Hitech City",
+      "overview": "The corporate core of Hyderabad's IT revolution. Modern glass architecture enclaves flanked by premium high-density apartment blocks.",
+      "scores": {
+        "safety": 9.5,
+        "education": 8.0,
+        "healthcare": 8.5,
+        "connectivity": 9.5,
+        "investment": 9.5,
+        "lifestyle": 9.0
+      },
+      "prices": {
+        "avg_price_per_sqft": 12600,
+        "rent_2bhk_avg": 45000,
+        "rent_3bhk_avg": 62000,
+        "market_tier": "Premium"
+      },
+      "growth_analytics": {
+        "market_status": "Stable / Stagnant",
+        "cagr_5_year_pct": 7.3,
+        "time_series_data": {
+          "2022": 9500,
+          "2023": 11000,
+          "2024": 12200,
+          "2025": 12600,
+          "2026": 12600
+        }
+      },
+      "amenities": {
+        "schools": ["Meridian School", "JNTU Area Clusters"],
+        "hospitals": ["Image Hospitals", "Maxivision Eye Care"],
+        "metro_stations": ["Hitech City Metro"]
+      },
+      "pros": [
+        "Virtually eliminates daily commute times for employees based in central IT towers.",
+        "High-security configurations with frequent police mobile patrols.",
+        "Flawless multi-lane access pathways."
+      ],
+      "cons": [
+        "Extremely scarce residential footprint causing high rental premium inflation.",
+        "Elevated exhaust and noise readings near key junctions.",
+        "Severe bottleneck points during peak corporate clock shifts."
+      ],
+      "ai_insights_anchor": "Designed primarily for corporate leadership profiles and expatriate packages who place premium priority on walk-to-work agility and high-security settings."
+    },
+    {
+      "id": "jubilee_hills",
+      "name": "Jubilee Hills",
+      "overview": "The historical elite neighborhood of Hyderabad. Features independent luxury configurations, low population density, and high-end social hubs.",
+      "scores": {
+        "safety": 9.5,
+        "education": 8.5,
+        "healthcare": 9.0,
+        "connectivity": 8.5,
+        "investment": 8.0,
+        "lifestyle": 10.0
+      },
+      "prices": {
+        "avg_price_per_sqft": 32320,
+        "rent_2bhk_avg": 55000,
+        "rent_3bhk_avg": 85000,
+        "market_tier": "Ultra-Luxury"
+      },
+      "growth_analytics": {
+        "market_status": "Stable / Premium Luxury",
+        "cagr_5_year_pct": 5.6,
+        "time_series_data": {
+          "2022": 26000,
+          "2023": 28500,
+          "2024": 30500,
+          "2025": 32300,
+          "2026": 32320
+        }
+      },
+      "amenities": {
+        "schools": ["Bharatiya Vidya Bhavan", "P. Obul Reddy Public School"],
+        "hospitals": ["Apollo Hospitals Jubilee Hills", "LV Prasad Eye Institute"],
+        "metro_stations": ["Jubilee Hills Checkpost Metro", "Road No 5 Metro"]
+      },
+      "pros": [
+        "Unrivaled social status and high-end aesthetic layout profiling.",
+        "Home to the city's highest concentration of gourmet hubs and luxury microbreweries.",
+        "Striking topography offering panoramic views and low structural congestion."
+      ],
+      "cons": [
+        "Astronomical cost requirements that restrict entry to high-net-worth brackets.",
+        "Commercial zoning spillover causes weekend street crowding.",
+        "Extremely limited footprint of mid-size modular apartment options."
+      ],
+      "ai_insights_anchor": "Exclusively targeted toward luxury buyers, corporate leadership, and established profiles who prioritize high lifestyle expression over traditional budget limits."
+    },
+    {
+      "id": "kukatpally",
+      "name": "Kukatpally",
+      "overview": "A massive, deeply integrated family residential mega-hub featuring highly developed traditional retail networks and strong neighborhood foundations.",
+      "scores": {
+        "safety": 8.0,
+        "education": 9.0,
+        "healthcare": 8.5,
+        "connectivity": 9.0,
+        "investment": 8.5,
+        "lifestyle": 7.5
+      },
+      "prices": {
+        "avg_price_per_sqft": 6520,
+        "rent_2bhk_avg": 22000,
+        "rent_3bhk_avg": 32000,
+        "market_tier": "Value"
+      },
+      "growth_analytics": {
+        "market_status": "Steady Growth",
+        "cagr_5_year_pct": 7.9,
+        "time_series_data": {
+          "2022": 4800,
+          "2023": 5400,
+          "2024": 5900,
+          "2025": 6500,
+          "2026": 6520
+        }
+      },
+      "amenities": {
+        "schools": ["DAV Public School", "Sanghamitra School"],
+        "hospitals": ["Prime Hospitals", "Omni Hospitals"],
+        "metro_stations": ["Kukatpally Metro", "KPHB Colony Metro"]
+      },
+      "pros": [
+        "Most accessible pricing profile within the extended IT orbit parameters.",
+        "Dense concentration of shopping complexes, retail outlets, and educational coaching hubs.",
+        "Highly efficient public transit via the red line metro network."
+      ],
+      "cons": [
+        "High population density creates chaotic, highly commercialized traffic corridors.",
+        "Longer physical travel distances to southern clusters like the Financial District.",
+        "Older public drainage links prone to short-term stress during seasonal monsoons."
+      ],
+      "ai_insights_anchor": "Highly recommended for families looking for budget-friendly options who value deep local markets and robust transit access over immediate proximity to corporate parks."
+    }
+  ]
+}
