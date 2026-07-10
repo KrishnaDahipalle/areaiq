@@ -70,6 +70,7 @@ class LongTermMemoryModel(BaseModel):
 
     extracted_profile: Dict[str, Any] = Field(
         default_factory=lambda: {
+            "persona":None,
             "purpose": None,
 
             "office_location": None,
