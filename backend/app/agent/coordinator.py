@@ -136,62 +136,40 @@ class AreaIQAgentCoordinator:
             )
             plan["conversation_context"] = context
 
+            # Contextual pronoun and entity fallback resolution
+            if "entities" in plan and plan["entities"]:
+                entities = plan["entities"]
+                if plan.get("intent") in ["EXPLAIN", "REPORT", "PLAN_VISIT"] and not entities.get("locality_id"):
+                    if isinstance(context, str) and context:
+                        entities["locality_id"] = context
+                    elif long_term.agent_state.last_recommendation:
+                        entities["locality_id"] = long_term.agent_state.last_recommendation
+                elif plan.get("intent") == "COMPARE":
+                    if not entities.get("locality_a") and long_term.agent_state.last_recommendation:
+                        entities["locality_a"] = long_term.agent_state.last_recommendation
+
         long_term.agent_state.last_intent = (
             plan.get("intent")
         )
 
         if plan.get("requires_more_info"):
 
-            persona = (
-                long_term.extracted_profile
-                .get("persona")
+            reply = response_builder.build_response(
+                user_message=sanitized_text,
+                profile=long_term.extracted_profile,
+                plan=plan,
+                tool_result={"success": False, "error": "Profile incomplete"},
+                critic_result=None,
+                chat_history=[msg if isinstance(msg, dict) else (msg.model_dump() if hasattr(msg, "model_dump") else msg.dict()) for msg in short_term.chat_history]
             )
-
-            missing = (
-                long_term.missing_slots
-            )
-
-            if persona:
-
-                reply = (
-                    persona_service
-                    .next_question(persona)
-                )
-
-            elif "purpose" in missing:
-
-                reply = (
-                    "What are you looking to do?\n\n"
-                    "• Relocate for work\n"
-                    "• Find a rental\n"
-                    "• Buy property\n"
-                    "• Open a business\n"
-                    "• Explore investment opportunities"
-                )
-
-            elif "budget" in missing:
-
-                reply = (
-                    "What's your monthly budget?"
-                )
-
-            elif "family_details" in missing:
-
-                reply = (
-                    "Will you be moving alone or with family?"
-                )
-
-            else:
-
-                reply = (
-                    "Tell me a bit more about your requirements."
-                )
 
             memory_manager.add_message_to_buffer(
                 session.session_id,
                 "assistant",
                 reply
             )
+
+            memory_manager.persist_session_state(session.session_id)
 
             return self._format_agent_output(
                 session,
@@ -233,16 +211,25 @@ class AreaIQAgentCoordinator:
             )
 
         if plan.get("intent") == "COMPARE":
-
             entities = plan.get(
                 "entities",
                 {}
             )
-
-            long_term.agent_state.last_compared_localities = [
-                entities.get("locality_a"),
-                entities.get("locality_b")
-            ]
+            loc_a = entities.get("locality_a")
+            loc_b = entities.get("locality_b")
+            
+            if not loc_a and not loc_b:
+                if not long_term.agent_state.last_compared_localities:
+                    long_term.agent_state.last_compared_localities = ["gachibowli", "madhapur"]
+            else:
+                prev_list = long_term.agent_state.last_compared_localities or ["gachibowli", "madhapur"]
+                if not loc_a:
+                    loc_a = prev_list[0] or "gachibowli"
+                if not loc_b:
+                    loc_b = prev_list[1] or "madhapur"
+                if loc_a == loc_b:
+                    loc_b = "madhapur" if loc_a != "madhapur" else "gachibowli"
+                long_term.agent_state.last_compared_localities = [loc_a, loc_b]
 
         if plan.get("intent") == "EXPLAIN":
 
@@ -255,12 +242,35 @@ class AreaIQAgentCoordinator:
                 locality
             )
 
+        if plan.get("intent") == "REPORT":
+
+            locality = (
+                plan.get("entities", {})
+                .get("locality_id")
+            )
+
+            long_term.agent_state.last_report_locality = (
+                locality
+            )
+
+        if plan.get("intent") == "PLAN_VISIT":
+
+            locality = (
+                plan.get("entities", {})
+                .get("locality_id")
+            )
+
+            long_term.agent_state.last_report_locality = (
+                locality
+            )
+
         reply = response_builder.build_response(
             user_message=sanitized_text,
             profile=long_term.extracted_profile,
             plan=plan,
             tool_result=tool_result,
-            critic_result=critic_result
+            critic_result=critic_result,
+            chat_history=[msg if isinstance(msg, dict) else (msg.model_dump() if hasattr(msg, "model_dump") else msg.dict()) for msg in short_term.chat_history]
         )
 
         memory_manager.add_message_to_buffer(
@@ -268,6 +278,8 @@ class AreaIQAgentCoordinator:
             "assistant",
             reply
         )
+
+        memory_manager.persist_session_state(session.session_id)
 
         return self._format_agent_output(
             session,

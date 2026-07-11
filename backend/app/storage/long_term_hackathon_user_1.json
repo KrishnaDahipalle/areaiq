@@ -1,0 +1,113 @@
+{
+  "missing_slots": [
+    "budget"
+  ],
+  "is_complete": false,
+  "extracted_profile": {
+    "persona": null,
+    "purpose": "relocation",
+    "office_location": "kondapur",
+    "budget": {
+      "value": null,
+      "currency": "INR",
+      "preferred_type": "Rent"
+    },
+    "family_details": {
+      "has_children": true,
+      "family_size": null
+    },
+    "priorities": {
+      "safety": 1.0,
+      "education": 1.0,
+      "healthcare": 1.0,
+      "connectivity": 1.0,
+      "investment": 1.0,
+      "lifestyle": 1.0
+    },
+    "preferences": {
+      "avoid_localities": [],
+      "walk_to_work": false,
+      "avoid_traffic": false,
+      "nightlife_importance": 5,
+      "investment_focus": true,
+      "quiet_neighborhood": false,
+      "good_schools_priority": true
+    }
+  },
+  "agent_state": {
+    "last_intent": "COLLECT_PROFILE",
+    "last_recommendation": null,
+    "last_report_locality": "kondapur",
+    "last_explained_locality": "kondapur",
+    "last_compared_localities": [
+      "gachibowli",
+      "madhapur"
+    ]
+  },
+  "chat_sessions": {
+    "session_sdjigr3": {
+      "session_id": "session_sdjigr3",
+      "title": "hi",
+      "chat_history": [
+        {
+          "role": "user",
+          "content": "hi"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey there! I'm AreaIQ, and I'd love to help you get settled near your office in Kondapur. To make sure I find the right spots for you and your family, what's your monthly budget for rent?"
+        }
+      ],
+      "agent_state": {
+        "last_intent": "COLLECT_PROFILE",
+        "last_recommendation": null,
+        "last_report_locality": null,
+        "last_explained_locality": "kondapur",
+        "last_compared_localities": [
+          "gachibowli",
+          "madhapur"
+        ]
+      }
+    },
+    "session_abc123": {
+      "session_id": "session_abc123",
+      "title": "hi",
+      "chat_history": [
+        {
+          "role": "user",
+          "content": "hi"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey there! I'd love to help you find the perfect spot near Kondapur. To get us started, what's your monthly budget for rent?"
+        },
+        {
+          "role": "user",
+          "content": "show stats for kondapur"
+        },
+        {
+          "role": "assistant",
+          "content": "Kondapur is a super popular spot for tech folks because it balances convenience and costs really well. It's growing fast, but keep in mind that traffic can get a bit heavy during the evenings.\n\nHere's a quick snapshot for you:\n• Avg 2BHK Rent: 35,000 INR\n• Avg 3BHK Rent: 48,000 INR\n• Market Momentum: Aggressive growth with 16.1% CAGR\n\nSince you've got kids and value good schools, this area is a strong contender. To get a better feel for your options, what is your monthly budget for rent?"
+        },
+        {
+          "role": "user",
+          "content": "hi"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey! We're still getting to know each other, so I'd love to help you narrow things down. To get the best recommendations, could you let me know what your monthly rent budget is?"
+        }
+      ],
+      "agent_state": {
+        "last_intent": "COLLECT_PROFILE",
+        "last_recommendation": null,
+        "last_report_locality": "kondapur",
+        "last_explained_locality": "kondapur",
+        "last_compared_localities": [
+          "gachibowli",
+          "madhapur"
+        ]
+      }
+    }
+  }
+}

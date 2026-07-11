@@ -26,45 +26,45 @@ export default function InsightsPanel({ recommendedLocality }: InsightsPanelProp
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       
       {/* COLUMN 1: Qualitative Advantages & Environmental Trade-offs */}
-      <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-5">
+      <div className="bg-slate-900/30 backdrop-blur-md border border-slate-800/60 p-6 rounded-xl space-y-5 shadow-xl shadow-slate-950/50">
         <div>
-          <h3 className="text-sm uppercase tracking-wider font-bold text-slate-400">Structural Field Assessment</h3>
-          <p className="text-xs text-slate-500 mt-0.5">Locality trade-offs for {recommendedLocality.name}</p>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">Structural Field Assessment</h3>
+          <p className="text-[10px] text-slate-500 mt-0.5">Locality trade-offs for {recommendedLocality.name}</p>
         </div>
 
         <div className="space-y-4">
           {/* Positives Enclave */}
           <div className="space-y-2">
-            <h4 className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 uppercase tracking-wide">
+            <h4 className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 uppercase tracking-wider">
               <CheckCircle2 className="h-3.5 w-3.5" /> Neighborhood Advantages
             </h4>
             <ul className="space-y-2">
               {recommendedLocality.pros.length > 0 ? (
                 recommendedLocality.pros.map((pro, index) => (
-                  <li key={index} className="text-xs text-slate-300 bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/40 leading-relaxed">
+                  <li key={index} className="text-xs text-slate-300 bg-slate-950/40 hover:bg-slate-950/60 p-2.5 rounded-lg border border-slate-850 hover:border-teal-500/20 transition-all duration-300 leading-relaxed transform hover:translate-x-0.5">
                     {pro}
                   </li>
                 ))
               ) : (
-                <li className="text-xs text-slate-400 italic">High density of tier-1 tech parks and hyper-localized walkable retail hubs.</li>
+                <li className="text-xs text-slate-400 italic bg-slate-950/30 p-2.5 rounded border border-slate-850">High density of tier-1 tech parks and walkable retail hubs.</li>
               )}
             </ul>
           </div>
 
           {/* Negatives Enclave */}
           <div className="space-y-2">
-            <h4 className="text-xs font-bold text-rose-400 flex items-center gap-1.5 uppercase tracking-wide">
+            <h4 className="text-xs font-bold text-rose-400 flex items-center gap-1.5 uppercase tracking-wider">
               <XCircle className="h-3.5 w-3.5" /> Environmental Trade-Offs
             </h4>
             <ul className="space-y-2">
               {recommendedLocality.cons.length > 0 ? (
                 recommendedLocality.cons.map((con, index) => (
-                  <li key={index} className="text-xs text-slate-300 bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/40 leading-relaxed">
+                  <li key={index} className="text-xs text-slate-300 bg-slate-950/40 hover:bg-slate-950/60 p-2.5 rounded-lg border border-slate-850 hover:border-teal-500/20 transition-all duration-300 leading-relaxed transform hover:translate-x-0.5">
                     {con}
                   </li>
                 ))
               ) : (
-                <li className="text-xs text-slate-400 italic">Elevated premium rent valuations and heavy traffic bottlenecks during peak rush hour.</li>
+                <li className="text-xs text-slate-400 italic bg-slate-950/30 p-2.5 rounded border border-slate-850">Elevated rent valuations and traffic bottlenecks during peak hours.</li>
               )}
             </ul>
           </div>
@@ -75,13 +75,13 @@ export default function InsightsPanel({ recommendedLocality }: InsightsPanelProp
       <div className="flex flex-col gap-6">
         
         {/* Critical Infrastructure Anchors */}
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl flex-1 space-y-4">
-          <h3 className="text-sm uppercase tracking-wider font-bold text-slate-400">Critical Infrastructure Anchors</h3>
+        <div className="bg-slate-900/30 backdrop-blur-md border border-slate-800/60 p-6 rounded-xl flex-1 space-y-4 shadow-xl shadow-slate-950/50">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">Critical Infrastructure Anchors</h3>
           
           <div className="space-y-3">
             {/* Education */}
-            <div className="flex items-start gap-3 bg-slate-950/40 p-3 rounded-lg border border-slate-800/40">
-              <div className="p-1.5 bg-indigo-500/10 text-indigo-400 rounded-md mt-0.5">
+            <div className="flex items-start gap-3 bg-slate-950/40 hover:bg-slate-950/60 p-3 rounded-lg border border-slate-850 hover:border-teal-500/25 transition-all duration-300">
+              <div className="p-1.5 bg-indigo-500/10 text-indigo-400 rounded-md mt-0.5 shadow-sm shadow-indigo-500/5">
                 <GraduationCap className="h-4 w-4" />
               </div>
               <div>
@@ -91,8 +91,8 @@ export default function InsightsPanel({ recommendedLocality }: InsightsPanelProp
             </div>
 
             {/* Medical */}
-            <div className="flex items-start gap-3 bg-slate-950/40 p-3 rounded-lg border border-slate-800/40">
-              <div className="p-1.5 bg-emerald-500/10 text-emerald-400 rounded-md mt-0.5">
+            <div className="flex items-start gap-3 bg-slate-950/40 hover:bg-slate-950/60 p-3 rounded-lg border border-slate-850 hover:border-teal-500/25 transition-all duration-300">
+              <div className="p-1.5 bg-emerald-500/10 text-emerald-400 rounded-md mt-0.5 shadow-sm shadow-emerald-500/5">
                 <Building2 className="h-4 w-4" />
               </div>
               <div>

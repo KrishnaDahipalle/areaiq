@@ -10,7 +10,8 @@ class ReportService:
         extracted from validated Pydantic model domains.
         """
         # 1. Ingest data via strict Pydantic model payloads
-        city_payload: CompleteCityPayloadModel = ranking_engine._load_dataset()
+        raw_data = ranking_engine._load_dataset()
+        city_payload = CompleteCityPayloadModel.model_validate(raw_data)
         localities: List[UnifiedLocalityModel] = city_payload.localities
         
         # 2. Extract specific model instance using clean object properties

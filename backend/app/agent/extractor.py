@@ -112,58 +112,67 @@ class AIExtractor:
         """
         
         try:
-            response = self.model.generate_content(
-                f"""
-            You are an information extraction engine.
+            prompt = f"""
+            {system_instruction}
 
-            Extract relocation information from the user message.
+            You are an information extraction engine.
+            Isolate parameters from the user's message.
+            Keep all current values from the CURRENT STATE REGISTERS unless explicitly changed or overridden by the user.
 
             Return ONLY valid JSON.
 
             Schema:
-
             {{
-            "persona":null,
-            "purpose": null,
-            "office_location": null,
-            "budget": {{
-                "value": null
-            }},
-            "family_details": {{
-                "has_children": null,
-                "family_size": null
-            }},
-            "preferences": {{
-                "avoid_traffic": null,
-                "quiet_neighborhood": null,
-                "walk_to_work": null,
-                "investment_focus": null
-            }}
+              "persona": null or string (WORKING_PROFESSIONAL, FAMILY, STUDENT, INVESTOR, BUSINESS_OWNER, TENANT),
+              "purpose": null or string,
+              "office_location": null or string,
+              "budget": {{
+                "value": null or number
+              }},
+              "family_details": {{
+                "has_children": null or boolean,
+                "family_size": null or number
+              }},
+              "priorities": {{
+                "safety": null or number,
+                "education": null or number,
+                "healthcare": null or number,
+                "connectivity": null or number,
+                "investment": null or number,
+                "lifestyle": null or number
+              }},
+              "preferences": {{
+                "avoid_localities": null or array of strings,
+                "walk_to_work": null or boolean,
+                "avoid_traffic": null or boolean,
+                "nightlife_importance": null or number,
+                "investment_focus": null or boolean,
+                "quiet_neighborhood": null or boolean,
+                "good_schools_priority": null or boolean
+              }}
             }}
 
             User Message:
             {user_message}
             """
-            )
+            response = self.model.generate_content(prompt)
 
             print("\nRAW GEMINI RESPONSE:")
             print(response.text)
 
             text = response.text.strip()
 
-            if text.startswith("```json"):
-                text = (
-                    text.replace("```json", "")
-                    .replace("```", "")
-                    .strip()
-                )
+            # Robust markdown JSON block extraction
+            if "```" in text:
+                import re
+                match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
+                if match:
+                    text = match.group(1).strip()
 
-            return json.loads(text)
-            print("\nRAW GEMINI RESPONSE:")
-            print(response.text)
+            parsed_json = json.loads(text)
             
             # Pure validation extraction using our schema definition model
-            validated = MasterExtractionPayload.model_validate_json(response.text.strip())
+            validated = MasterExtractionPayload.model_validate(parsed_json)
             return validated.model_dump(exclude_none=True)
         except Exception as e:
             print("\nEXTRACTOR ERROR:")
