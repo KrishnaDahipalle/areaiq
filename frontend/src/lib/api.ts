@@ -9,12 +9,20 @@ export interface ChatResponsePayload {
   current_stage: string;
   profile_complete: boolean;
   missing_slots: string[];
+  agent_state?: {
+    last_intent?: string;
+    last_recommendation?: string;
+    last_report_locality?: string;
+    last_explained_locality?: string;
+    last_compared_localities?: string[];
+  };
 }
 
 export interface LocalityScoringResponse {
   locality_id: string;
   name: string;
   global_suitability_score: number;
+  commute_score: number;
   dimension_scores: Record<string, number>;
   calculation_explanation: string;
 }
@@ -139,6 +147,33 @@ export class ApiClient {
    */
   static async getItinerary(locality_id: string): Promise<ItineraryResponsePayload> {
     return this.request<ItineraryResponsePayload>(`/planner/generate/${locality_id}`, {
+      method: "GET",
+    });
+  }
+
+  /**
+   * Fetches raw locality details including pros, cons, schools, and hospitals
+   */
+  static async getLocalityMetadata(locality_id: string): Promise<any> {
+    return this.request<any>(`/locality/IN/TS/Hyderabad/${locality_id}`, {
+      method: "GET",
+    });
+  }
+
+  /**
+   * Fetches list of all chat sessions for a user ID
+   */
+  static async listSessions(userId: string): Promise<any[]> {
+    return this.request<any[]>(`/chat/sessions/${userId}`, {
+      method: "GET",
+    });
+  }
+
+  /**
+   * Fetches and restores previous chat logs and state for a session
+   */
+  static async getSession(userId: string, sessionId: string): Promise<any> {
+    return this.request<any>(`/chat/sessions/${userId}/${sessionId}`, {
       method: "GET",
     });
   }

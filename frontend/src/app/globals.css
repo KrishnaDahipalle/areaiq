@@ -21,6 +21,30 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: rgb(47, 73, 117);
   }
+
+  /* Grid overlay background */
+  .tech-grid {
+    background-size: 40px 40px;
+    background-image: 
+      linear-gradient(to right, rgba(148, 163, 184, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
+  }
+
+  /* Custom mesh glow circles */
+  .mesh-glow {
+    background: 
+      radial-gradient(circle at 10% 20%, rgba(20, 184, 166, 0.04) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.04) 0%, transparent 40%);
+  }
+
+  /* Sleek neon glow borders */
+  .glow-border-teal {
+    box-shadow: 0 0 15px rgba(20, 184, 166, 0.1);
+  }
+  
+  .glow-border-indigo {
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.1);
+  }
 }
 
 body {

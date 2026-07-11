@@ -135,15 +135,18 @@ class RankingService:
                     * 2.0
                 )
 
-            final_score = round(
-                max(
-                    0.0,
-                    base_suitability
-                    - penalty
-                    + commute_bonus
-                    + preference_bonus
-                ),
-                2
+            final_score = min(
+                100.0,
+                round(
+                    max(
+                        0.0,
+                        base_suitability
+                        - penalty
+                        + commute_bonus
+                        + preference_bonus
+                    ),
+                    2
+                )
             )
             scored_results.append({
                 "locality_id": loc.get("id"),

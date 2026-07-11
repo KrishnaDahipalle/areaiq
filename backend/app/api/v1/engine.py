@@ -13,6 +13,7 @@ class LocalityScoringResponse(BaseModel):
     locality_id: str
     name: str
     global_suitability_score: float
+    commute_score: float
     dimension_scores: dict[str, float]
     calculation_explanation: str
 

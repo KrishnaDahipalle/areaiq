@@ -26,6 +26,8 @@ class CommuteService:
         office_location: str,
         locality: str
     ):
+        if not office_location:
+            return 5
 
         office = office_location.lower()
         locality = locality.lower()

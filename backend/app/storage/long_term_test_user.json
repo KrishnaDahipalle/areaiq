@@ -1,0 +1,49 @@
+{
+  "missing_slots": [
+    "office_location",
+    "budget",
+    "family_details"
+  ],
+  "is_complete": false,
+  "extracted_profile": {
+    "persona": null,
+    "purpose": "compare madhapur vs gachibowli",
+    "office_location": null,
+    "budget": {
+      "value": null,
+      "currency": "INR",
+      "preferred_type": "Rent"
+    },
+    "family_details": {
+      "has_children": null,
+      "family_size": null
+    },
+    "priorities": {
+      "safety": 1.0,
+      "education": 1.0,
+      "healthcare": 1.0,
+      "connectivity": 1.0,
+      "investment": 1.0,
+      "lifestyle": 1.0
+    },
+    "preferences": {
+      "avoid_localities": [],
+      "walk_to_work": false,
+      "avoid_traffic": false,
+      "nightlife_importance": 5,
+      "investment_focus": false,
+      "quiet_neighborhood": false,
+      "good_schools_priority": false
+    }
+  },
+  "agent_state": {
+    "last_intent": "COMPARE",
+    "last_recommendation": null,
+    "last_report_locality": "kukatpally",
+    "last_explained_locality": null,
+    "last_compared_localities": [
+      "madhapur",
+      "gachibowli"
+    ]
+  }
+}

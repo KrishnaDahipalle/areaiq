@@ -111,6 +111,11 @@ class LongTermMemoryModel(BaseModel):
         default_factory=AgentState
     )
 
+    chat_sessions: Dict[str, Dict[str, Any]] = Field(
+        default_factory=dict,
+        description="Mappings of session_id to their chat details (title, chat_history, agent_state)"
+    )
+
 
 class UserSessionStateModel(BaseModel):
     user_id: str
